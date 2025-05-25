@@ -1,76 +1,332 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>JPEG to PNG Converter - Plinzotools</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      margin: 0;
-      padding: 40px;
-      text-align: center;
-    }
-    h1 {
-      color: #333;
-    }
-    input[type="file"] {
-      margin-top: 20px;
-    }
-    canvas {
-      display: none;
-      margin-top: 20px;
-    }
-    a.download-link {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 10px 20px;
-      background-color: #007acc;
-      color: white;
-      text-decoration: none;
-      border-radius: 5px;
-    }
-  </style>
+    <style>
+        .converter-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        .converter-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1rem;
+            color: #64748b;
+            margin-top: 0.5rem;
+        }
+
+        .drop-zone {
+            border: 2px dashed #e2e8f0;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .drop-zone.active {
+            border-color: #3b82f6;
+            background-color: #f8fafc;
+        }
+
+        .drop-content {
+            transition: opacity 0.3s ease;
+        }
+
+        .drop-zone.active .drop-content {
+            opacity: 0.4;
+        }
+
+        .image-preview {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 90%;
+            max-height: 200px;
+            display: none;
+        }
+
+        .image-preview img {
+            max-height: 180px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .fa-cloud-upload-alt {
+            font-size: 2.5rem;
+            color: #94a3b8;
+            margin-bottom: 1rem;
+        }
+
+        .process-indicator {
+            margin: 1.5rem 0;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #3b82f6;
+            width: 0;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            display: block;
+            text-align: center;
+            color: #64748b;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .button-container {
+            width: 100%;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+
+        .convert-btn {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            display: block;
+            padding: 1rem;
+            font-size: 1.1rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .convert-btn:hover {
+            background: #2563eb;
+        }
+
+        .result-section {
+            margin-top: 1.5rem;
+            display: none;
+        }
+
+        .download-area {
+            width: 100%;
+            text-align: center;
+            padding: 1.5rem 0;
+        }
+
+        #Download-Button {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+            justify-content: center;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.5rem;
+            background: #3b82f6;
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        #Download-Button:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 640px) {
+            .converter-container {
+                border-radius: 0;
+                padding: 1.5rem;
+            }
+            
+            .drop-zone {
+                padding: 1.5rem;
+            }
+            
+            #Download-Button {
+                max-width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1>JPEG to PNG Converter</h1>
-  <input type="file" accept="image/jpeg" id="upload" />
-  <canvas id="canvas"></canvas>
-  <br />
-  <a id="download" class="download-link" style="display:none;">Download PNG</a>
+    <div class="converter-container">
+        <div class="converter-header">
+            <p class="subtitle">Convert JPEG images to PNG format with instant processing</p>
+        </div>
+        
+        <div class="converter-body">
+            <div class="drop-zone" id="dropZone">
+                <div class="drop-content">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Drag & Drop JPEG Files Here</p>
+                    <span class="or-text">OR</span>
+                    <button class="browse-btn" onclick="document.getElementById('fileInput').click()">Browse Files</button>
+                    <input type="file" id="fileInput" accept="image/jpeg" hidden>
+                </div>
+                <div class="image-preview" id="imagePreview"></div>
+            </div>
+            
+            <div class="process-indicator" id="processIndicator">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <span class="progress-text" id="progressText">0%</span>
+            </div>
+            
+            <div class="button-container">
+                <button class="convert-btn" id="convertBtn">Convert to PNG</button>
+            </div>
+            
+            <div class="result-section" id="resultSection">
+                <div class="download-area" id="downloadArea">
+                    <!-- Added Download Button with ID here -->
+                    <a id="Download-Button" class="download-link" style="display: none;">
+                        <i class="fas fa-download"></i>
+                        <span id="download-text">Download PNG</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
-  <script>
-    const uploadInput = document.getElementById('upload');
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d');
-    const downloadLink = document.getElementById('download');
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const convertBtn = document.getElementById('convertBtn');
+        const resultSection = document.getElementById('resultSection');
+        const downloadArea = document.getElementById('downloadArea');
+        const imagePreview = document.getElementById('imagePreview');
+        const processIndicator = document.getElementById('processIndicator');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        let selectedFile = null;
 
-    uploadInput.addEventListener('change', function (e) {
-      const file = e.target.files[0];
-      if (!file || !file.type.startsWith('image/jpeg')) {
-        alert('Please upload a JPEG image.');
-        return;
-      }
+        // Drag & drop handlers
+        ['dragover', 'dragenter'].forEach(event => {
+            dropZone.addEventListener(event, (e) => {
+                e.preventDefault();
+                dropZone.classList.add('active');
+            });
+        });
 
-      const reader = new FileReader();
-      reader.onload = function (event) {
-        const img = new Image();
-        img.onload = function () {
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
-          canvas.style.display = 'block';
+        ['dragleave', 'dragend', 'drop'].forEach(event => {
+            dropZone.addEventListener(event, (e) => {
+                e.preventDefault();
+                dropZone.classList.remove('active');
+            });
+        });
 
-          const pngUrl = canvas.toDataURL('image/png');
-          downloadLink.href = pngUrl;
-          downloadLink.download = file.name.replace(/\.jpe?g/i, '.png');
-          downloadLink.style.display = 'inline-block';
-        };
-        img.src = event.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
-  </script>
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            handleFile(file);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFile(e.target.files[0]);
+        });
+
+        function handleFile(file) {
+            if (file && file.type === 'image/jpeg') {
+                selectedFile = file;
+                showImagePreview(file);
+                convertBtn.style.display = 'block';
+            } else {
+                alert('Please select a valid JPEG file');
+            }
+        }
+
+        function showImagePreview(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                imagePreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function simulateProgress() {
+            let progress = 0;
+            processIndicator.style.display = 'block';
+            
+            const interval = setInterval(() => {
+                progress += 2;
+                progressFill.style.width = `${progress}%`;
+                progressText.textContent = `${progress}%`;
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    processIndicator.style.display = 'none';
+                    startConversion();
+                }
+            }, 50);
+        }
+
+        function startConversion() {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    
+                    canvas.toBlob((blob) => {
+                        const url = URL.createObjectURL(blob);
+                        const fileName = selectedFile.name.replace(/\.jpe?g$/, '.png');
+                        const fileSize = Math.round(blob.size/1024);
+                        
+                        // Update the existing download button instead of creating new one
+                        const downloadBtn = document.getElementById('Download-Button');
+                        downloadBtn.href = url;
+                        downloadBtn.download = fileName;
+                        document.getElementById('download-text').textContent = `Download PNG (${fileSize}KB)`;
+                        downloadBtn.style.display = 'inline-flex';
+                        resultSection.style.display = 'block';
+                    }, 'image/png');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(selectedFile);
+        }
+
+        convertBtn.addEventListener('click', () => {
+            if (!selectedFile) return;
+            convertBtn.style.display = 'none';
+            simulateProgress();
+        });
+
+        // Load Font Awesome
+        const fa = document.createElement('link');
+        fa.rel = 'stylesheet';
+        fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css';
+        document.head.appendChild(fa);
+    </script>
 </body>
 </html>
