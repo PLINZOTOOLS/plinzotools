@@ -221,139 +221,157 @@
         </div>
     </div>
 
-    <script>
-        const RAPIDAPI_KEY = 'f8ae97bff6msh42a93647ba373f7p1d533bjsn1b86340526b1';
-        const RAPIDAPI_HOST = 'youtube-video-fast-downloader-24-7.p.rapidapi.com';
-        
-        const videoInput = document.getElementById('videoUrl');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const result = document.getElementById('result');
-        const videoInfo = document.getElementById('videoInfo');
-        const downloadOptions = document.getElementById('downloadOptions');
-        const errorMsg = document.getElementById('errorMsg');
+<!-- Previous HTML and CSS code remains the same -->
 
-        function showError(message) {
-            errorMsg.textContent = message;
-            errorMsg.style.display = 'block';
-            setTimeout(() => {
-                errorMsg.style.display = 'none';
-            }, 3000);
-        }
+<script>
+    const RAPIDAPI_KEY = 'f8ae97bff6msh42a93647ba373f7p1d533bjsn1b86340526b1';
+    const RAPIDAPI_HOST = 'youtube-video-fast-downloader-24-7.p.rapidapi.com';
+    
+    const videoInput = document.getElementById('videoUrl');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const result = document.getElementById('result');
+    const videoInfo = document.getElementById('videoInfo');
+    const downloadOptions = document.getElementById('downloadOptions');
+    const errorMsg = document.getElementById('errorMsg');
 
-        function validateYouTubeUrl(url) {
-            const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
-            return youtubeRegex.test(url);
-        }
+    function showError(message) {
+        errorMsg.textContent = message;
+        errorMsg.style.display = 'block';
+        setTimeout(() => {
+            errorMsg.style.display = 'none';
+        }, 5000);
+    }
 
-        function getVideoId(url) {
-            try {
-                const urlObj = new URL(url);
-                if (url.includes('youtu.be')) {
-                    return urlObj.pathname.slice(1);
-                }
-                return urlObj.searchParams.get('v');
-            } catch (error) {
-                return null;
+    function validateYouTubeUrl(url) {
+        const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+        return youtubeRegex.test(url);
+    }
+
+    function getVideoId(url) {
+        try {
+            const urlObj = new URL(url);
+            if (url.includes('youtu.be')) {
+                return urlObj.pathname.slice(1);
             }
-        }
-
-        async function getVideoDetails(videoId) {
-            const options = {
-                method: 'GET',
-                headers: {
-                    'X-RapidAPI-Key': RAPIDAPI_KEY,
-                    'X-RapidAPI-Host': RAPIDAPI_HOST
-                }
-            };
-
-            const response = await fetch(`https://${RAPIDAPI_HOST}/video_details/${videoId}`, options);
-            if (!response.ok) {
-                throw new Error('Failed to fetch video details');
-            }
-            return await response.json();
-        }
-
-        async function processVideo() {
-            const url = videoInput.value.trim();
-            
-            if (!url) {
-                showError('Please enter a YouTube video URL');
-                return;
-            }
-
-            if (!validateYouTubeUrl(url)) {
-                showError('Please enter a valid YouTube URL');
-                return;
-            }
-
-            const videoId = getVideoId(url);
+            const videoId = urlObj.searchParams.get('v');
             if (!videoId) {
-                showError('Invalid YouTube URL');
-                return;
+                throw new Error('Invalid YouTube URL');
             }
+            return videoId;
+        } catch (error) {
+            return null;
+        }
+    }
 
-            downloadBtn.disabled = true;
-            downloadBtn.innerHTML = 'Processing... <span class="loading"></span>';
-
-            try {
-                const details = await getVideoDetails(videoId);
-
-                // Display video information
-                videoInfo.innerHTML = `
-                    <img src="${details.thumbnail || 'https://via.placeholder.com/120x68'}" 
-                         alt="Video thumbnail" 
-                         class="video-thumbnail">
-                    <div class="video-details">
-                        <div class="video-title">${details.title || 'Video Title'}</div>
-                        <div class="video-duration">${details.duration || 'Unknown duration'}</div>
-                    </div>
-                `;
-
-                // Display download options
-                downloadOptions.innerHTML = `
-                    <a href="https://${RAPIDAPI_HOST}/download_video/${videoId}?quality=720" 
-                       class="download-btn" 
-                       target="_blank" 
-                       rel="noopener noreferrer"
-                       onclick="this.style.background='#45a049'">
-                       Download 720p MP4
-                    </a>
-                    <a href="https://${RAPIDAPI_HOST}/download_video/${videoId}?quality=1080" 
-                       class="download-btn" 
-                       target="_blank" 
-                       rel="noopener noreferrer"
-                       onclick="this.style.background='#45a049'">
-                       Download 1080p MP4
-                    </a>
-                    <a href="https://${RAPIDAPI_HOST}/download_audio/${videoId}?quality=251" 
-                       class="download-btn" 
-                       target="_blank" 
-                       rel="noopener noreferrer"
-                       onclick="this.style.background='#45a049'">
-                       Download MP3 Audio
-                    </a>
-                `;
-
-                result.classList.add('show');
-            } catch (error) {
-                showError('Failed to process video. Please try again.');
-                console.error('Error:', error);
-            } finally {
-                downloadBtn.disabled = false;
-                downloadBtn.textContent = 'Download Video';
+    async function getDownloadUrl(videoId, type = 'video', quality = '720') {
+        const options = {
+            method: 'GET',
+            headers: {
+                'X-RapidAPI-Key': RAPIDAPI_KEY,
+                'X-RapidAPI-Host': RAPIDAPI_HOST
             }
+        };
+
+        const endpoint = type === 'audio' ? 'download_audio' : 'download_video';
+        const response = await fetch(`https://${RAPIDAPI_HOST}/${endpoint}/${videoId}?quality=${quality}`, options);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        if (!data.url) {
+            throw new Error('Download URL not found');
+        }
+        return data.url;
+    }
+
+    async function processVideo() {
+        const url = videoInput.value.trim();
+        
+        if (!url) {
+            showError('Please enter a YouTube video URL');
+            return;
         }
 
-        videoInput.addEventListener('input', () => {
-            result.classList.remove('show');
-        });
+        if (!validateYouTubeUrl(url)) {
+            showError('Please enter a valid YouTube URL');
+            return;
+        }
 
-        videoInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                processVideo();
-            }
-        });
-    </script>
+        const videoId = getVideoId(url);
+        if (!videoId) {
+            showError('Could not extract video ID from URL');
+            return;
+        }
+
+        downloadBtn.disabled = true;
+        downloadBtn.innerHTML = 'Processing... <span class="loading"></span>';
+
+        try {
+            // Get download URLs for different formats
+            const [video720p, video1080p, audioUrl] = await Promise.all([
+                getDownloadUrl(videoId, 'video', '720'),
+                getDownloadUrl(videoId, 'video', '1080'),
+                getDownloadUrl(videoId, 'audio', '251')
+            ]);
+
+            // Display video information (using a placeholder for now)
+            videoInfo.innerHTML = `
+                <img src="https://img.youtube.com/vi/${videoId}/mqdefault.jpg" 
+                     alt="Video thumbnail" 
+                     class="video-thumbnail">
+                <div class="video-details">
+                    <div class="video-title">YouTube Video</div>
+                    <div class="video-duration">Ready to download</div>
+                </div>
+            `;
+
+            // Display download options with direct URLs
+            downloadOptions.innerHTML = `
+                <a href="${video720p}" 
+                   class="download-btn" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   download>
+                   Download 720p MP4
+                </a>
+                <a href="${video1080p}" 
+                   class="download-btn" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   download>
+                   Download 1080p MP4
+                </a>
+                <a href="${audioUrl}" 
+                   class="download-btn" 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   download>
+                   Download MP3 Audio
+                </a>
+            `;
+
+            result.classList.add('show');
+        } catch (error) {
+            console.error('Error:', error);
+            showError(error.message || 'Failed to process video. Please try again.');
+        } finally {
+            downloadBtn.disabled = false;
+            downloadBtn.textContent = 'Download Video';
+        }
+    }
+
+    videoInput.addEventListener('input', () => {
+        result.classList.remove('show');
+    });
+
+    videoInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            processVideo();
+        }
+    });
+</script>
 </body>
 </html>
