@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlinzoTools - YouTube Video Downloader</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        h1 {
+            color: #1e3c72;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo span {
+            color: #2a5298;
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="url"]:focus {
+            border-color: #2a5298;
+            outline: none;
+            box-shadow: 0 0 5px rgba(42, 82, 152, 0.3);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #2a5298;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #1e3c72;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            background: #f5f5f5;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .download-options {
+            display: grid;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .download-btn {
+            background: #4CAF50;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background: #45a049;
+        }
+
+        .error {
+            color: #ff3333;
+            text-align: center;
+            margin-top: 10px;
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <span>PlinzoTools</span>
+        </div>
+        <h1>YouTube Video Downloader</h1>
+        <div class="input-group">
+            <input type="url" id="videoUrl" placeholder="Paste YouTube video URL here..." />
+        </div>
+        <button id="downloadBtn" onclick="processVideo()">Download Video</button>
+        <div class="error" id="errorMsg"></div>
+        <div class="result" id="result">
+            <h3>Available Downloads:</h3>
+            <div class="download-options" id="downloadOptions"></div>
+        </div>
+    </div>
+
+    <script>
+        const videoInput = document.getElementById('videoUrl');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const result = document.getElementById('result');
+        const downloadOptions = document.getElementById('downloadOptions');
+        const errorMsg = document.getElementById('errorMsg');
+
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+            setTimeout(() => {
+                errorMsg.style.display = 'none';
+            }, 3000);
+        }
+
+        function validateYouTubeUrl(url) {
+            const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\/.+/;
+            return youtubeRegex.test(url);
+        }
+
+        function processVideo() {
+            const url = videoInput.value.trim();
+            
+            if (!url) {
+                showError('Please enter a YouTube video URL');
+                return;
+            }
+
+            if (!validateYouTubeUrl(url)) {
+                showError('Please enter a valid YouTube URL');
+                return;
+            }
+
+            downloadBtn.disabled = true;
+            downloadBtn.textContent = 'Processing...';
+
+            // Simulate API call (replace this with actual API integration)
+            setTimeout(() => {
+                // This is where you would normally make an API call to your backend
+                // For demonstration, we'll show dummy download options
+                result.classList.add('show');
+                downloadOptions.innerHTML = `
+                    <a href="#" class="download-btn" data-quality="720p">Download 720p MP4</a>
+                    <a href="#" class="download-btn" data-quality="1080p">Download 1080p MP4</a>
+                    <a href="#" class="download-btn" data-quality="audio">Download MP3 Audio</a>
+                `;
+
+                downloadBtn.disabled = false;
+                downloadBtn.textContent = 'Download Video';
+            }, 1500);
+        }
+
+        videoInput.addEventListener('input', () => {
+            result.classList.remove('show');
+        });
+
+        // Prevent form submission on Enter key
+        videoInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                processVideo();
+            }
+        });
+    </script>
+</body>
+</html>
